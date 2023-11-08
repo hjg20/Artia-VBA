@@ -1,0 +1,195 @@
+Sub MarketBasketMaker()
+'
+' MarketBasketMaker Macro
+'
+' Keyboard Shortcut: Ctrl+Shift+P
+'
+    Range("A:A").Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+        
+    Range("A1").FormulaR1C1 = "NDC11"
+    Range("A2").FormulaR1C1 = "=SUBSTITUTE(RC[1],""-"","""")"
+    Range("A2").Select
+    Selection.AutoFill Destination:=Range("A2:A" & Range("B" & Rows.Count).End(xlUp).Row)
+    Range(Selection, Selection.End(xlDown)).Select
+    
+    Columns("A:A").EntireColumn.AutoFit
+    
+    Columns("A:A").Copy
+    Columns("A:A").PasteSpecial xlPasteValues
+    
+    Range("A:A").Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    
+    Range("A1") = "Duplicates"
+    Range("A2").Formula = "=IF(COUNTIF(B:B, B2)>1,""DUPLICATE"","""")"
+    Range("A2").Select
+    Selection.AutoFill Destination:=Range("A2:A" & Range("B" & Rows.Count).End(xlUp).Row)
+    Range(Selection, Selection.End(xlDown)).Select
+    
+    Range("F:F").Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Range("F1") = "ProductName2"
+    Dim SingleValue() As String
+    For k = 2 To Application.WorksheetFunction.CountA(Columns(1))
+        SingleValue = Split(Range("E" & k), " ")
+        Range("F" & k).Value = SingleValue(0)
+    Next k
+    
+    Cells.Columns.AutoFit
+    
+    Range("G2").Select
+    ActiveWindow.FreezePanes = True
+    
+    
+End Sub
+Sub DataPuller()
+'
+' DataPuller Macro
+'
+' Keyboard Shortcut: Ctrl+Shift+D
+'
+Dim refresh
+Dim year As String
+Dim quarters As ListObject
+Dim intColIndex As Integer
+
+Dim strPath As String
+Dim strProv As String
+Dim strConn As String
+Dim Conn As New Connection
+Dim rsQry As New Recordset
+Dim strQry As String
+Dim NDCs As Range
+Dim CMS As String
+Dim pool As String
+Dim mb As String
+Dim ProductName2s As Range
+Dim ws As Worksheet
+Dim financial
+
+
+
+
+refresh = MsgBox("Start a query for 2022 CMS Utilization Data?", vbYesNo)
+
+If refresh = vbYes Then
+    'year = Application.InputBox("Which year would you like CMS Utilization Data from:" & vbNewLine & "2019, 2020, 2021, or 2022?", "Input Year")
+    'If year = "2022" Then
+    
+        financial = MsgBox("Would you like Financial Data?", vbYesNo)
+        If financial = vbNo Then
+            CMS = "[1Q2022 - 4Q2022 CMS Utilization Data]"
+            pool = "[State Pools June 2023]"
+            mb = "MB_without_financials"
+            
+            
+        
+            'strPath = "C:\Users\hgarrison\Documents\PRM DOCS\1Q2022 - 4Q2022 CMS Utilization Database.accdb"
+            strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2022 - 4Q2022 CMS Utilization Database.accdb"
+            strProv = "Microsoft.ACE.OLEDB.12.0;"
+            strConn = "Provider=" & strProv & "Data Source=" & strPath
+            Conn.Open strConn
+            strQry = "DELETE * from " & mb
+            rsQry.Open strQry, Conn
+            Conn.Execute strQry
+            Sheets.Add.Name = "Data"
+            
+            xlFilepath = Application.ActiveWorkbook.FullName
+            'dsh = "[" & Application.ActiveSheet.Name & "$]"
+            strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2) SELECT NDC11, ProductNameLong, ProductName2 FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
+            Conn.Execute strQry
+            
+            
+            strQry = "SELECT " & CMS & ".[ID], " & CMS & ".[State], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[NDC11], " & CMS & ".[Quarter], " & CMS & ".[Year], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[Units], " & CMS & ".[Scripts], " & CMS & ".[Total Amount]"
+            strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[State]) ON [" & mb & "].[NDC11] = " & CMS & ".[NDC11]"
+            Conn.Execute strQry
+            rsQry.Open strQry, Conn
+            
+            Set ws = ActiveWorkbook.Sheets("Data")
+            ws.Range("A1").CopyFromRecordset rsQry
+            
+            ws.Range("A1").EntireRow.Insert
+            ws.Range("A1") = "ID"
+            ws.Range("B1") = "ST"
+            ws.Range("C1") = "Pool"
+            ws.Range("D1") = "MCO Included"
+            ws.Range("E1") = "NDC11"
+            ws.Range("F1") = "Quarter"
+            ws.Range("G1") = "Year"
+            ws.Range("H1") = "ProductNameLong"
+            ws.Range("I1") = "ProductName2"
+            ws.Range("J1") = "Units"
+            ws.Range("K1") = "Scripts"
+            ws.Range("L1") = "Total Amount"
+            ws.Cells.Columns.AutoFit
+            ws.Columns("J:J").NumberFormat = "#,##0"
+            ws.Columns("K:K").NumberFormat = "#,##0"
+            ws.Columns("L:L").NumberFormat = "$#,##0.#0"
+            ws.Range("A1").EntireRow.AutoFilter
+            ws.Range("A2").Select
+            ActiveWindow.FreezePanes = True
+        End If
+        
+        If financial = vbYes Then
+            CMS = "[1Q2022 - 4Q2022 CMS Utilization Data]"
+            pool = "[State Pools June 2023]"
+            mb = "MB_with_financials"
+        
+            'strPath = "C:\Users\hgarrison\Documents\PRM DOCS\1Q2022 - 4Q2022 CMS Utilization Database.accdb"
+            strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2022 - 4Q2022 CMS Utilization Database.accdb"
+            strProv = "Microsoft.ACE.OLEDB.12.0;"
+            strConn = "Provider=" & strProv & "Data Source=" & strPath
+            Conn.Open strConn
+            strQry = "DELETE * from " & mb
+            rsQry.Open strQry, Conn
+            Conn.Execute strQry
+            Sheets.Add.Name = "Data"
+            
+            xlFilepath = Application.ActiveWorkbook.FullName
+            'dsh = "[" & Application.ActiveSheet.Name & "$]"
+            strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice]) "
+            strQry = strQry & "SELECT NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice] "
+            strQry = strQry & "FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
+            Conn.Execute strQry
+            
+            
+            strQry = "SELECT " & CMS & ".[ID], " & CMS & ".[State], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[NDC11], " & CMS & ".[Quarter], " & CMS & ".[Year], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[Units], " & CMS & ".[Scripts], " & CMS & ".[Total Amount], " & mb & ".[BrandGenericStatus], " & mb & ".[LicenseTypeName], " & mb & ".[AWPUnitPrice], " & mb & ".[WACUnitPrice], " & mb & ".[est_ura], " & mb & ".[ACA-FULUnitPrice], " & mb & ".[ACA-WAMPUnitPrice], " & mb & ".[NADAC-MonUnitPrice], " & mb & ".[NADAC-WKUnitPrice]"
+            strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[State]) ON [" & mb & "].[NDC11] = " & CMS & ".[NDC11]"
+            Conn.Execute strQry
+            rsQry.Open strQry, Conn
+            
+            Set ws = ActiveWorkbook.Sheets("Data")
+            ws.Range("A1").CopyFromRecordset rsQry
+            
+            ws.Range("A1").EntireRow.Insert
+            ws.Range("A1") = "ID"
+            ws.Range("B1") = "ST"
+            ws.Range("C1") = "Pool"
+            ws.Range("D1") = "MCO Included"
+            ws.Range("E1") = "NDC11"
+            ws.Range("F1") = "Quarter"
+            ws.Range("G1") = "Year"
+            ws.Range("H1") = "ProductNameLong"
+            ws.Range("I1") = "ProductName2"
+            ws.Range("J1") = "Units"
+            ws.Range("K1") = "Scripts"
+            ws.Range("L1") = "Total Amount"
+            ws.Range("M1") = "BrandGenericStatus"
+            ws.Range("N1") = "LicenseTypeName"
+            ws.Range("O1") = "AWPUnitPrice"
+            ws.Range("P1") = "WACUnitPrice"
+            ws.Range("Q1") = "est_ura"
+            ws.Range("R1") = "ACA-FULUnitPrice"
+            ws.Range("S1") = "ACA-WAMPUnitPrice"
+            ws.Range("T1") = "NADAC-MonUnitPrice"
+            ws.Range("U1") = "NADAC-WKUnitPrice"
+            ws.Cells.Columns.AutoFit
+            ws.Columns("J:J").NumberFormat = "#,##0"
+            ws.Columns("K:K").NumberFormat = "#,##0"
+            ws.Columns("L:L").NumberFormat = "$#,##0.#0"
+            ws.Range("A1").EntireRow.AutoFilter
+            ws.Range("A2").Select
+            ActiveWindow.FreezePanes = True
+        End If
+        
+    'End If
+End If
+End Sub
