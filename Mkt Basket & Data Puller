@@ -1,30 +1,19 @@
 Sub MarketBasketMaker()
-'
-' MarketBasketMaker Macro
-'
-' Keyboard Shortcut: Ctrl+Shift+P
-'
     Range("A:A").Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
-        
     Range("A1").FormulaR1C1 = "NDC11"
     Range("A2").FormulaR1C1 = "=SUBSTITUTE(RC[1],""-"","""")"
     Range("A2").Select
     Selection.AutoFill Destination:=Range("A2:A" & Range("B" & Rows.Count).End(xlUp).Row)
     Range(Selection, Selection.End(xlDown)).Select
-    
     Columns("A:A").EntireColumn.AutoFit
-    
     Columns("A:A").Copy
     Columns("A:A").PasteSpecial xlPasteValues
-    
     Range("A:A").Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
-    
     Range("A1") = "Duplicates"
     Range("A2").Formula = "=IF(COUNTIF(B:B, B2)>1,""DUPLICATE"","""")"
     Range("A2").Select
     Selection.AutoFill Destination:=Range("A2:A" & Range("B" & Rows.Count).End(xlUp).Row)
     Range(Selection, Selection.End(xlDown)).Select
-    
     Range("F:F").Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
     Range("F1") = "ProductName2"
     Dim SingleValue() As String
@@ -32,29 +21,29 @@ Sub MarketBasketMaker()
         SingleValue = Split(Range("E" & k), " ")
         Range("F" & k).Value = SingleValue(0)
     Next k
-    
-    Cells.Columns.AutoFit
-    
+    Cells.Columns.AutoFit  
     Range("G2").Select
     ActiveWindow.FreezePanes = True
     ActiveSheet.Name = "Sheet1"
     Range("A1").EntireRow.AutoFilter
     ActiveWindow.SmallScroll Down:=-99999
-    
-    
 End Sub
 
+
+
+
+
+
+
+
+
+
+
 Sub DataPuller()
-'
-' DataPuller Macro
-'
-' Keyboard Shortcut: Ctrl+Shift+D
-'
 Dim refresh
 Dim year As String
 Dim quarters As ListObject
 Dim intColIndex As Integer
-
 Dim strPath As String
 Dim strProv As String
 Dim strConn As String
@@ -68,22 +57,15 @@ Dim mb As String
 Dim ProductName2s As Range
 Dim ws As Worksheet
 Dim financial
-
-
-
-
 refresh = MsgBox("Start a query for CMS Utilization Data?", vbYesNo)
-
 If refresh = vbYes Then
     year = Application.InputBox("Which year would you like CMS Utilization Data from:" & vbNewLine & "2019, 2020, 2021, or 2022?", "Input Year")
     If year = "2022" Then
-    
         financial = MsgBox("Would you like Financial Data?", vbYesNo)
         If financial = vbNo Then
             CMS = "[1Q2022 - 4Q2022 CMS Utilization Data]"
             pool = "[State Pools June 2023]"
             mb = "MB_without_financials"
-            
             strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2022 - 4Q2022 CMS Utilization Database.accdb"
             strProv = "Microsoft.ACE.OLEDB.12.0;"
             strConn = "Provider=" & strProv & "Data Source=" & strPath
@@ -92,20 +74,15 @@ If refresh = vbYes Then
             rsQry.Open strQry, Conn
             Conn.Execute strQry
             Sheets.Add.Name = "Data"
-            
             xlFilepath = Application.ActiveWorkbook.FullName
             strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2) SELECT NDC11, ProductNameLong, ProductName2 FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
             Conn.Execute strQry
-            
-            
             strQry = "SELECT " & CMS & ".[ID], " & CMS & ".[State], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[NDC11], " & CMS & ".[Quarter], " & CMS & ".[Year], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[Units], " & CMS & ".[Scripts], " & CMS & ".[Total Amount]"
             strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[State]) ON [" & mb & "].[NDC11] = " & CMS & ".[NDC11]"
             Conn.Execute strQry
             rsQry.Open strQry, Conn
-            
             Set ws = ActiveWorkbook.Sheets("Data")
             ws.Range("A1").CopyFromRecordset rsQry
-            
             ws.Range("A1").EntireRow.Insert
             ws.Range("A1") = "ID"
             ws.Range("B1") = "ST"
@@ -127,12 +104,10 @@ If refresh = vbYes Then
             ws.Range("A2").Select
             ActiveWindow.FreezePanes = True
         End If
-        
         If financial = vbYes Then
             CMS = "[1Q2022 - 4Q2022 CMS Utilization Data]"
             pool = "[State Pools June 2023]"
             mb = "MB_with_financials"
-        
             strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2022 - 4Q2022 CMS Utilization Database.accdb"
             strProv = "Microsoft.ACE.OLEDB.12.0;"
             strConn = "Provider=" & strProv & "Data Source=" & strPath
@@ -141,22 +116,17 @@ If refresh = vbYes Then
             rsQry.Open strQry, Conn
             Conn.Execute strQry
             Sheets.Add.Name = "Data"
-            
             xlFilepath = Application.ActiveWorkbook.FullName
             strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice]) "
             strQry = strQry & "SELECT NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice] "
             strQry = strQry & "FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
             Conn.Execute strQry
-            
-            
             strQry = "SELECT " & CMS & ".[ID], " & CMS & ".[State], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[NDC11], " & CMS & ".[Quarter], " & CMS & ".[Year], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[Units], " & CMS & ".[Scripts], " & CMS & ".[Total Amount], " & mb & ".[BrandGenericStatus], " & mb & ".[LicenseTypeName], " & mb & ".[AWPUnitPrice], " & mb & ".[WACUnitPrice], " & mb & ".[est_ura], " & mb & ".[ACA-FULUnitPrice], " & mb & ".[ACA-WAMPUnitPrice], " & mb & ".[NADAC-MonUnitPrice], " & mb & ".[NADAC-WKUnitPrice]"
             strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[State]) ON [" & mb & "].[NDC11] = " & CMS & ".[NDC11]"
             Conn.Execute strQry
             rsQry.Open strQry, Conn
-            
             Set ws = ActiveWorkbook.Sheets("Data")
             ws.Range("A1").CopyFromRecordset rsQry
-            
             ws.Range("A1").EntireRow.Insert
             ws.Range("A1") = "ID"
             ws.Range("B1") = "ST"
@@ -187,16 +157,13 @@ If refresh = vbYes Then
             ws.Range("A2").Select
             ActiveWindow.FreezePanes = True
         End If
-        
     End If
     If year = "2021" Then
-    
         financial = MsgBox("Would you like Financial Data?", vbYesNo)
         If financial = vbNo Then
             CMS = "[1Q2021 - 4Q2021 CMS Utilization Data]"
             pool = "[State Pools June 2023]"
             mb = "MB_without_financials"
-            
             strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2021 - 4Q2021 CMS Utilization Database.accdb"
             strProv = "Microsoft.ACE.OLEDB.12.0;"
             strConn = "Provider=" & strProv & "Data Source=" & strPath
@@ -205,20 +172,15 @@ If refresh = vbYes Then
             rsQry.Open strQry, Conn
             Conn.Execute strQry
             Sheets.Add.Name = "Data"
-            
             xlFilepath = Application.ActiveWorkbook.FullName
             strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2) SELECT NDC11, ProductNameLong, ProductName2 FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
             Conn.Execute strQry
-            
-            
             strQry = "SELECT " & CMS & ".[ID], " & CMS & ".[State], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[NDC11], " & CMS & ".[Quarter], " & CMS & ".[Year], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[Units], " & CMS & ".[Scripts], " & CMS & ".[Total Amount]"
             strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[State]) ON [" & mb & "].[NDC11] = " & CMS & ".[NDC11]"
             Conn.Execute strQry
             rsQry.Open strQry, Conn
-            
             Set ws = ActiveWorkbook.Sheets("Data")
             ws.Range("A1").CopyFromRecordset rsQry
-            
             ws.Range("A1").EntireRow.Insert
             ws.Range("A1") = "ID"
             ws.Range("B1") = "ST"
@@ -240,12 +202,10 @@ If refresh = vbYes Then
             ws.Range("A2").Select
             ActiveWindow.FreezePanes = True
         End If
-        
         If financial = vbYes Then
             CMS = "[1Q2021 - 4Q2021 CMS Utilization Data]"
             pool = "[State Pools June 2023]"
             mb = "MB_with_financials"
-        
             strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2021 - 4Q2021 CMS Utilization Database.accdb"
             strProv = "Microsoft.ACE.OLEDB.12.0;"
             strConn = "Provider=" & strProv & "Data Source=" & strPath
@@ -253,23 +213,18 @@ If refresh = vbYes Then
             strQry = "DELETE * from " & mb
             rsQry.Open strQry, Conn
             Conn.Execute strQry
-            Sheets.Add.Name = "Data"
-            
+            Sheets.Add.Name = "Data"          
             xlFilepath = Application.ActiveWorkbook.FullName
             strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice]) "
             strQry = strQry & "SELECT NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice] "
             strQry = strQry & "FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
-            Conn.Execute strQry
-            
-            
+            Conn.Execute strQry            
             strQry = "SELECT " & CMS & ".[ID], " & CMS & ".[State], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[NDC11], " & CMS & ".[Quarter], " & CMS & ".[Year], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[Units], " & CMS & ".[Scripts], " & CMS & ".[Total Amount], " & mb & ".[BrandGenericStatus], " & mb & ".[LicenseTypeName], " & mb & ".[AWPUnitPrice], " & mb & ".[WACUnitPrice], " & mb & ".[est_ura], " & mb & ".[ACA-FULUnitPrice], " & mb & ".[ACA-WAMPUnitPrice], " & mb & ".[NADAC-MonUnitPrice], " & mb & ".[NADAC-WKUnitPrice]"
             strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[State]) ON [" & mb & "].[NDC11] = " & CMS & ".[NDC11]"
             Conn.Execute strQry
-            rsQry.Open strQry, Conn
-            
+            rsQry.Open strQry, Conn           
             Set ws = ActiveWorkbook.Sheets("Data")
-            ws.Range("A1").CopyFromRecordset rsQry
-            
+            ws.Range("A1").CopyFromRecordset rsQry            
             ws.Range("A1").EntireRow.Insert
             ws.Range("A1") = "ID"
             ws.Range("B1") = "ST"
@@ -299,17 +254,14 @@ If refresh = vbYes Then
             ws.Range("A1").EntireRow.AutoFilter
             ws.Range("A2").Select
             ActiveWindow.FreezePanes = True
-        End If
-        
+        End If  
     End If
     If year = "2020" Then
-    
         financial = MsgBox("Would you like Financial Data?", vbYesNo)
         If financial = vbNo Then
             CMS = "[1Q2020 - 4Q2020 CMS Utilization Data]"
             pool = "[State Pools June 2023]"
-            mb = "MB_without_financials"
-            
+            mb = "MB_without_financials"           
             strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2020 - 4Q2020 CMS Utilization Database.accdb"
             strProv = "Microsoft.ACE.OLEDB.12.0;"
             strConn = "Provider=" & strProv & "Data Source=" & strPath
@@ -317,21 +269,16 @@ If refresh = vbYes Then
             strQry = "DELETE * from " & mb
             rsQry.Open strQry, Conn
             Conn.Execute strQry
-            Sheets.Add.Name = "Data"
-            
+            Sheets.Add.Name = "Data" 
             xlFilepath = Application.ActiveWorkbook.FullName
             strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2) SELECT NDC11, ProductNameLong, ProductName2 FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
             Conn.Execute strQry
-            
-            
             strQry = "SELECT " & CMS & ".[record_id], " & CMS & ".[state_code], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[ndc], " & CMS & ".[quarter], " & CMS & ".[period_covered], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[units_reimbursed], " & CMS & ".[number_of_prescriptions], " & CMS & ".[total_amount_reimbursed]"
             strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[state_code]) ON [" & mb & "].[NDC11] = " & CMS & ".[ndc]"
             Conn.Execute strQry
             rsQry.Open strQry, Conn
-            
             Set ws = ActiveWorkbook.Sheets("Data")
             ws.Range("A1").CopyFromRecordset rsQry
-            
             ws.Range("A1").EntireRow.Insert
             ws.Range("A1") = "ID"
             ws.Range("B1") = "ST"
@@ -353,12 +300,10 @@ If refresh = vbYes Then
             ws.Range("A2").Select
             ActiveWindow.FreezePanes = True
         End If
-        
         If financial = vbYes Then
             CMS = "[1Q2020 - 4Q2020 CMS Utilization Data]"
             pool = "[State Pools June 2023]"
             mb = "MB_with_financials"
-        
             strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2020 - 4Q2020 CMS Utilization Database.accdb"
             strProv = "Microsoft.ACE.OLEDB.12.0;"
             strConn = "Provider=" & strProv & "Data Source=" & strPath
@@ -367,22 +312,17 @@ If refresh = vbYes Then
             rsQry.Open strQry, Conn
             Conn.Execute strQry
             Sheets.Add.Name = "Data"
-            
             xlFilepath = Application.ActiveWorkbook.FullName
             strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice]) "
             strQry = strQry & "SELECT NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice] "
             strQry = strQry & "FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
             Conn.Execute strQry
-            
-            
             strQry = "SELECT " & CMS & ".[record_id], " & CMS & ".[state_code], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[ndc], " & CMS & ".[quarter], " & CMS & ".[period_covered], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[units_reimbursed], " & CMS & ".[number_of_prescriptions], " & CMS & ".[total_amount_reimbursed], " & mb & ".[BrandGenericStatus], " & mb & ".[LicenseTypeName], " & mb & ".[AWPUnitPrice], " & mb & ".[WACUnitPrice], " & mb & ".[est_ura], " & mb & ".[ACA-FULUnitPrice], " & mb & ".[ACA-WAMPUnitPrice], " & mb & ".[NADAC-MonUnitPrice], " & mb & ".[NADAC-WKUnitPrice]"
             strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[state_code]) ON [" & mb & "].[NDC11] = " & CMS & ".[ndc]"
             Conn.Execute strQry
             rsQry.Open strQry, Conn
-            
             Set ws = ActiveWorkbook.Sheets("Data")
             ws.Range("A1").CopyFromRecordset rsQry
-            
             ws.Range("A1").EntireRow.Insert
             ws.Range("A1") = "ID"
             ws.Range("B1") = "ST"
@@ -415,13 +355,11 @@ If refresh = vbYes Then
         End If
     End If
     If year = "2019" Then
-
     financial = MsgBox("Would you like Financial Data?", vbYesNo)
         If financial = vbNo Then
             CMS = "[1Q2019 - 4Q2019 CMS Utilization Data]"
             pool = "[State Pools June 2023]"
             mb = "MB_without_financials"
-            
             strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2019 - 4Q2019 CMS Utilization Database.accdb"
             strProv = "Microsoft.ACE.OLEDB.12.0;"
             strConn = "Provider=" & strProv & "Data Source=" & strPath
@@ -430,20 +368,15 @@ If refresh = vbYes Then
             rsQry.Open strQry, Conn
             Conn.Execute strQry
             Sheets.Add.Name = "Data"
-            
             xlFilepath = Application.ActiveWorkbook.FullName
             strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2) SELECT NDC11, ProductNameLong, ProductName2 FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
             Conn.Execute strQry
-            
-            
             strQry = "SELECT " & CMS & ".[record_id], " & CMS & ".[state_code], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[ndc], " & CMS & ".[quarter], " & CMS & ".[period_covered], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[units_reimbursed], " & CMS & ".[number_of_prescriptions], " & CMS & ".[total_amount_reimbursed]"
             strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[state_code]) ON [" & mb & "].[NDC11] = " & CMS & ".[ndc]"
             Conn.Execute strQry
             rsQry.Open strQry, Conn
-            
             Set ws = ActiveWorkbook.Sheets("Data")
-            ws.Range("A1").CopyFromRecordset rsQry
-            
+            ws.Range("A1").CopyFromRecordset rsQry      
             ws.Range("A1").EntireRow.Insert
             ws.Range("A1") = "ID"
             ws.Range("B1") = "ST"
@@ -465,12 +398,10 @@ If refresh = vbYes Then
             ws.Range("A2").Select
             ActiveWindow.FreezePanes = True
         End If
-        
         If financial = vbYes Then
             CMS = "[1Q2019 - 4Q2019 CMS Utilization Data]"
             pool = "[State Pools June 2023]"
             mb = "MB_with_financials"
-        
             strPath = "Z:\Analytics\Staff\hgarrison\PRM DOCS\1Q2019 - 4Q2019 CMS Utilization Database.accdb"
             strProv = "Microsoft.ACE.OLEDB.12.0;"
             strConn = "Provider=" & strProv & "Data Source=" & strPath
@@ -479,22 +410,17 @@ If refresh = vbYes Then
             rsQry.Open strQry, Conn
             Conn.Execute strQry
             Sheets.Add.Name = "Data"
-            
             xlFilepath = Application.ActiveWorkbook.FullName
             strQry = "INSERT INTO " & mb & " (NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice]) "
             strQry = strQry & "SELECT NDC11, ProductNameLong, ProductName2, BrandGenericStatus, LicenseTypeName, AWPUnitPrice, WACUnitPrice, [est_ura], [ACA-FULUnitPrice], [ACA-WAMPUnitPrice], [NADAC-MonUnitPrice], [NADAC-WKUnitPrice] "
             strQry = strQry & "FROM [Excel 12.0;HDR=YES;DATABASE=" & xlFilepath & "].[Sheet1$]"
             Conn.Execute strQry
-            
-            
             strQry = "SELECT " & CMS & ".[record_id], " & CMS & ".[state_code], " & pool & ".[Pool], " & pool & ".[MCO Included], " & CMS & ".[ndc], " & CMS & ".[quarter], " & CMS & ".[period_covered], " & mb & ".[ProductNameLong], " & mb & ".[ProductName2], " & CMS & ".[units_reimbursed], " & CMS & ".[number_of_prescriptions], " & CMS & ".[total_amount_reimbursed], " & mb & ".[BrandGenericStatus], " & mb & ".[LicenseTypeName], " & mb & ".[AWPUnitPrice], " & mb & ".[WACUnitPrice], " & mb & ".[est_ura], " & mb & ".[ACA-FULUnitPrice], " & mb & ".[ACA-WAMPUnitPrice], " & mb & ".[NADAC-MonUnitPrice], " & mb & ".[NADAC-WKUnitPrice]"
             strQry = strQry & "FROM [" & mb & "] INNER JOIN (" & pool & " INNER JOIN " & CMS & " ON " & pool & ".[St] = " & CMS & ".[state_code]) ON [" & mb & "].[NDC11] = " & CMS & ".[ndc]"
             Conn.Execute strQry
             rsQry.Open strQry, Conn
-            
             Set ws = ActiveWorkbook.Sheets("Data")
-            ws.Range("A1").CopyFromRecordset rsQry
-            
+            ws.Range("A1").CopyFromRecordset rsQry 
             ws.Range("A1").EntireRow.Insert
             ws.Range("A1") = "ID"
             ws.Range("B1") = "ST"
@@ -560,12 +486,18 @@ Selection.TextToColumns Destination:=Range("L1"), DataType:=xlDelimited, _
     Semicolon:=False, Comma:=False, Space:=False, Other:=False, FieldInfo _
     :=Array(1, 1), TrailingMinusNumbers:=True
 End Sub
-Sub Rid_National_Data()
-'
-' Rid_National_Data Macro
-'
 
-'
+
+
+
+
+
+
+
+
+
+
+Sub Rid_National_Data()
     ActiveSheet.Range("$A:$DD").AutoFilter Field:=2, Criteria1:="XX"
     Rows("2:999999").Select
     Selection.Delete Shift:=xlUp
@@ -574,12 +506,17 @@ Sub Rid_National_Data()
     ActiveWindow.SmallScroll Down:=-99999
 End Sub
 
-Sub UtilizationSummary()
-'
-' UtilizationSummary Macro
-'
 
-'
+
+
+
+
+
+
+
+
+
+Sub UtilizationSummary()
     ActiveSheet.Sort.SortFields.Clear
     ActiveSheet.Sort.SortFields.Add2 Key:=Range("B:B") _
         , SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
